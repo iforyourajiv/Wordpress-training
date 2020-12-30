@@ -68,6 +68,8 @@ class Users_List extends WP_List_Table
       ['id' => $id],
       ['%d']
     );
+    wp_redirect( admin_url( '/admin.php?page=show-records' ) );
+    exit;
   }
 
   /**
@@ -101,17 +103,6 @@ class Users_List extends WP_List_Table
    */
   function column_name($item)
   {
-
-
-    // switch($columns){
-    //   case 'name':
-    //   $title = '<strong>' . $item['name'] . '</strong> ';
-    //   break;
-    //   case 'email':
-    //   $title = '<strong>' . $item['email'] . '</strong> '; 
-    //   break;
-
-    // }
     $title = '<strong>' . $item['name'] . '</strong> ';
     // create a nonce
     $delete_nonce = wp_create_nonce('sp_delete_users');
@@ -205,6 +196,44 @@ class Users_List extends WP_List_Table
     }
   }
 
+  public function process_bulk_action() {
+
+    //Detect when a bulk action is being triggered...
+    if ( 'delete' === $this->current_action() ) {
+  
+      // In our file that handles the request, verify the nonce.
+      $nonce = esc_attr( $_REQUEST['_wpnonce'] );
+  
+      if ( ! wp_verify_nonce( $nonce, 'sp_delete_users' ) ) {
+        die( 'Go get a life script kiddies' );
+      }
+      else {
+        self::delete_users( absint( $_GET['users'] ) );
+  
+        wp_redirect( esc_url( add_query_arg() ) );
+        exit;
+      }
+  
+    }
+  
+    // If the delete bulk action is triggered
+    if ( ( isset( $_POST['action'] ) && $_POST['action'] == 'bulk-delete' )
+         || ( isset( $_POST['action2'] ) && $_POST['action2'] == 'bulk-delete' )
+    ) {
+  
+      $delete_ids = esc_sql( $_POST['bulk-delete'] );
+  
+      // loop over the array of record IDs and delete them
+      foreach ( $delete_ids as $id ) {
+        self::delete_users( $id );
+  
+      }
+  
+      wp_redirect( esc_url( add_query_arg() ) );
+      exit;
+    }
+  }
+
 
   /**
    * Handles data query and filter, sorting, and pagination.
@@ -218,7 +247,7 @@ class Users_List extends WP_List_Table
     $sortable = $this->get_sortable_columns();
     $this->_column_headers = array($columns, $hidden, $sortable);
     /** Process bulk action */
-    // $this->process_bulk_action();
+    $this->process_bulk_action();
 
     $per_page     = $this->get_items_per_page('users_per_page', 4);
     $current_page = $this->get_pagenum();
