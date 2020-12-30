@@ -32,6 +32,11 @@ if (!defined('Ced_sample_plugin_DIR')) {
 	define('Ced_sample_plugin_DIR', plugin_dir_url(__FILE__));
 }
 
+
+if (!defined("CED_PLUGIN_DIR_PATH")) {
+	define("Ced_sample_plugin_DIR_PATH", plugin_dir_path(__FILE__));
+}
+
 // Creating Function For Script/style
 if (!function_exists('Ced_sample_plugin_script')) {
 	function Ced_sample_plugin_script()
@@ -171,45 +176,40 @@ if (isset($_POST['submit'])) {
 	ced_saveContact_formData();
 }
 
+
+
+
 // For Printing Data in Table on Admin Menu
+
 function ced_show_record()
 {
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'cedContact';
+	include_once Ced_sample_plugin_DIR_PATH . "includes/showData-wp-list-table.php";
+	$obj = new Users_List();
 
-	// Getting Row numbers of table
-	$total = $wpdb->get_var("SELECT COUNT(*) FROM (SELECT * FROM $table_name) AS countdata");
-	$post_per_page = 2;
-	$page = isset($_GET['pagec']) ? abs((int) $_GET['pagec']) : 1;
-	$offset = ($page * $post_per_page) - $post_per_page;
 
-	//  GET OUR RESULTS 
-	$results = $wpdb->get_results("SELECT * FROM $table_name LIMIT $post_per_page OFFSET $offset");
-	if ($results > 0) {
-		$show = "<h1 style='text-align:center;'>All Records</h1>";
-		$show .= "<table style='text-align:center; margin-left:30%;'>";
-		$show .= "<th style='border:1px solid black;'>Name</th> <th style='border:1px solid black;'>Email</th> <th style='border:1px solid black;'>Mobile</th>";
-		foreach ($results as $data) {
-			$show .= "<tr>";
-			$show .= "<td>$data->name</td>";
-			$show .= "<td>$data->email</td>";
-			$show .= "<td>$data->mobile</td>";
-			$show .= "</tr>";
-		}
-		$show .= "</table>";
-		$show .= "<div style='margin-left:45%; margin-top:20px;'>";
+?>
+	<div class="wrap">
+		<h2>All Records</h2>
 
-		//defining Pagination Structure
-		$show .= paginate_links(array(
-			'base' => add_query_arg('pagec', '%#%'),
-			'prev_text' => __('&laquo;'),
-			'next_text' => __('&raquo;'),
-			'total' => ceil($total / $post_per_page),
-			'current' => $page,
-		));
-		$show .= "</div>";
-		echo $show;
-	} else {
-		echo "<h2>No Record Founds</h2>";
-	}
-}
+		<div id="poststuff">
+			<div id="post-body" class="metabox-holder columns-2">
+				<div id="post-body-content">
+					<div class="meta-box-sortables ui-sortable">
+						<form method="post">
+							<?php
+
+							$obj->prepare_items();
+							$obj->display();
+
+							?>
+						</form>
+					</div>
+				</div>
+			</div>
+			<br class="clear">
+		</div>
+	</div>
+
+<?php }
+
+?>
