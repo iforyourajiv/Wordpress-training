@@ -5,7 +5,7 @@ if (!class_exists('WP_List_Table')) {
 }
 
 
-class Users_List extends WP_List_Table
+class Subscriber_List extends WP_List_Table
 {
 
   /** Class constructor */
@@ -33,23 +33,37 @@ class Users_List extends WP_List_Table
   public static function get_users($per_page = 5, $page_number = 1)
   {
 
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'cedContact';
-
-    $sql = "SELECT * FROM $table_name";
-
-    if (!empty($_REQUEST['orderby'])) {
-      $sql .= ' ORDER BY ' . esc_sql($_REQUEST['orderby']);
-      $sql .= !empty($_REQUEST['order']) ? ' ' . esc_sql($_REQUEST['order']) : ' ASC';
+    $args = array(
+      'post_type'     => '',
+      'post_status'   => 'publish',
+      'fields'        => 'ids',
+      'meta_query'    => array(
+        array(
+          'key'        => 'email',
+          'compare'    => 'exist',
+          'type'       => 'CHAR',
+        ),
+      ),
+    );
+  
+    // The Query
+    $result_query = new WP_Query( $args );
+  
+    $ID_array = $result_query->posts;
+    // Restore original Post Data
+    wp_reset_postdata();
+    $post_data=array();
+    foreach($ID_array as $ids){
+      $post_data['email']=get_post_meta(  $ids, 'email' );
+      $post_data['posttitle']=get_the_title( $ids );
+      return $post_data;
     }
+    
+    
+   
 
-    $sql .= " LIMIT $per_page";
+  
 
-    $sql .= ' OFFSET ' . ($page_number - 1) * $per_page;
-
-
-    $result = $wpdb->get_results($sql, 'ARRAY_A');
-    return $result;
   }
 
   /**
@@ -68,8 +82,6 @@ class Users_List extends WP_List_Table
       ['id' => $id],
       ['%d']
     );
-    
-    
   }
 
   /**
@@ -196,40 +208,38 @@ class Users_List extends WP_List_Table
     }
   }
 
-  public function process_bulk_action() {
+  public function process_bulk_action()
+  {
 
     //Detect when a bulk action is being triggered...
-    if ( 'delete' === $this->current_action() ) {
-  
+    if ('delete' === $this->current_action()) {
+
       // In our file that handles the request, verify the nonce.
-      $nonce = esc_attr( $_REQUEST['_wpnonce'] );
-  
-      if ( ! wp_verify_nonce( $nonce, 'sp_delete_users' ) ) {
-        die( 'Go get a life script kiddies' );
-      }
-      else {
-        self::delete_users( absint( $_GET['users'] ) );
-  
-        wp_redirect( esc_url( add_query_arg() ) );
+      $nonce = esc_attr($_REQUEST['_wpnonce']);
+
+      if (!wp_verify_nonce($nonce, 'sp_delete_users')) {
+        die('Go get a life script kiddies');
+      } else {
+        self::delete_users(absint($_GET['users']));
+
+        wp_redirect(esc_url(add_query_arg()));
         exit;
       }
-  
     }
-  
+
     // If the delete bulk action is triggered
-    if ( ( isset( $_POST['action'] ) && $_POST['action'] == 'bulk-delete' )
-         || ( isset( $_POST['action2'] ) && $_POST['action2'] == 'bulk-delete' )
+    if ((isset($_POST['action']) && $_POST['action'] == 'bulk-delete')
+      || (isset($_POST['action2']) && $_POST['action2'] == 'bulk-delete')
     ) {
-  
-      $delete_ids = esc_sql( $_POST['bulk-delete'] );
-  
+
+      $delete_ids = esc_sql($_POST['bulk-delete']);
+
       // loop over the array of record IDs and delete them
-      foreach ( $delete_ids as $id ) {
-        self::delete_users( $id );
-  
+      foreach ($delete_ids as $id) {
+        self::delete_users($id);
       }
-  
-      wp_redirect( esc_url( add_query_arg() ) );
+
+      wp_redirect(esc_url(add_query_arg()));
       exit;
     }
   }

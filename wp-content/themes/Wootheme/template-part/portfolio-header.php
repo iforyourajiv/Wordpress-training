@@ -9,14 +9,21 @@
 <title><?php echo get_bloginfo("name"); ?></title>
 </head>
 <body>
+
 <div id="wrapper" >
 	<div id="wrapper-bgbtm">
+          <?php get_sidebar() ?>
 		<div id="header" style="text-align:center">
 			<div id="logo">
 				<h1><a href="<?php echo home_url();?>">Portfolio</a></h1>
 			</div>
+
 		</div>
+
 	</div>
+
+
+
 		
      
        

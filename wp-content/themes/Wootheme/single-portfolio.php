@@ -10,7 +10,8 @@
                             <?php the_content(); 
                                  comments_template('/comments.php');
                                 endwhile;
-                            ?>
-                        </div>
+                            ?>  
+                                                      </div>
+
                         
-                <?php get_template_part( 'template-part/portfolio', 'footer' ); ?>
+              

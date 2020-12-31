@@ -24,8 +24,6 @@ the_title( '<h3 class="entry-title"><a href="' . get_permalink() . '" title="' .
 
 <?php endwhile; ?>
 
-<?php get_template_part( 'template-part/portfolio', 'footer' ); ?>
-
 
 
 
