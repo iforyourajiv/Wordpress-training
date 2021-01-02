@@ -128,7 +128,6 @@ class Subscribe_Now extends WP_Widget
 // Saving The Subscriber Email in Post Meta Table
 if (isset($_POST['ced_task_plugin_subscribe'])) {
     $post_id = $_POST['id'];
-    echo $post_id;
     $email = $_POST['emailsubcriber'];
     $exist = get_post_meta($post_id, 'email', true);
     if (!empty($exist)) {
