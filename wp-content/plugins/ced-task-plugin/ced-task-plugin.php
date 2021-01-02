@@ -83,15 +83,16 @@ function ced_subscriber_menu_html()
 }
 
 //Database creation with Plugin
-function ced_show_subscriber_record(){
+function ced_show_subscriber_record()
+{
 	require_once Ced_task_plugin_DIR_PATH  . '/includes/Ced-showData-wp-list-table.php';
-	$obj=new Subscriber_List();
-	echo "<pre>";
-	print_r($obj->get_users());
+	$obj = new Subscriber_List();
+	$obj->prepare_items();
+	$obj->display();
 }
 
 
-// Creating New Post type
+// Creating New Post type 'Blog'
 function ced_create_blog_posttype()
 {
 
@@ -106,7 +107,7 @@ function ced_create_blog_posttype()
 			),
 			'public' => true,
 			'has_archive' => true,
-			'supports'            => array('title', 'editor', 'excerpt', 'author', 'thumbnail', 'comments', 'custom-fields'),
+			'supports' => array('title', 'editor', 'excerpt', 'author', 'thumbnail', 'comments', 'custom-fields'),
 			'rewrite' => array('slug' => 'blog'),
 			'show_in_rest' => true,
 
@@ -121,6 +122,7 @@ add_action('init', 'ced_create_blog_posttype');
 
 // Creating Widget Subscribe Now
 
+//Calling Class File from /Widget/class-subscribeNow-widget.php
 
 require_once Ced_task_plugin_DIR_PATH  . '/Widget/class-subscribeNow-widget.php';
 function Subscribe_Now_widget()
@@ -128,7 +130,3 @@ function Subscribe_Now_widget()
 	register_widget('Subscribe_Now');
 }
 add_action('widgets_init', 'Subscribe_Now_widget');
-
-
-
-

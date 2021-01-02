@@ -30,11 +30,11 @@ class Subscriber_List extends WP_List_Table
    */
 
 
-  public static function get_users($per_page = 5, $page_number = 1)
+  public static function get_users()
   {
 
     $args = array(
-      'post_type'     => '',
+      'post_type'     => 'any',
       'post_status'   => 'publish',
       'fields'        => 'ids',
       'meta_query'    => array(
@@ -45,25 +45,21 @@ class Subscriber_List extends WP_List_Table
         ),
       ),
     );
-  
+
     // The Query
-    $result_query = new WP_Query( $args );
-  
+    $result_query = new WP_Query($args);
+
     $ID_array = $result_query->posts;
     // Restore original Post Data
     wp_reset_postdata();
-    $post_data=array();
-    foreach($ID_array as $ids){
-      $post_data['email']=get_post_meta(  $ids, 'email' );
-      $post_data['posttitle']=get_the_title( $ids );
-      return $post_data;
+    $post_data = array();
+    foreach ($ID_array as $ids) {
+      $meta = get_post_meta($ids, 'email', 1);
+      foreach ($meta as $key => $value) {
+        $post_data[] = array('posttitle' => get_the_title($ids), "email" => $value);
+      }
     }
-    
-    
-   
-
-  
-
+    return $post_data;
   }
 
   /**
@@ -72,31 +68,13 @@ class Subscriber_List extends WP_List_Table
    * @param int $id customer ID
    */
 
-  public static function delete_users($id)
-  {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'cedContact';
-
-    $wpdb->delete(
-      "$table_name",
-      ['id' => $id],
-      ['%d']
-    );
-  }
 
   /**
    * Returns the count of records in the database.
    *
    * @return null|string
    */
-  public static function record_count()
-  {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'cedContact';
-    $sql = "SELECT COUNT(*) FROM $table_name";
 
-    return $wpdb->get_var($sql);
-  }
 
   /** Text displayed when no customer data is available */
   public function no_items()
@@ -115,7 +93,7 @@ class Subscriber_List extends WP_List_Table
    */
   function column_name($item)
   {
-    $title = '<strong>' . $item['name'] . '</strong> ';
+    $title = '<strong>' . $item['email'] . '</strong> ';
     // create a nonce
     $delete_nonce = wp_create_nonce('sp_delete_users');
 
@@ -134,13 +112,7 @@ class Subscriber_List extends WP_List_Table
    *
    * @return string
    */
-  function column_cb($item)
-  {
-    return sprintf(
-      '<input type="checkbox" name="bulk-delete[]" value="%s" />',
-      $item['id']
-    );
-  }
+
 
 
   /**
@@ -151,10 +123,8 @@ class Subscriber_List extends WP_List_Table
   function get_columns()
   {
     $columns = [
-      'cb'      => '<input type="checkbox" />',
-      'name'    => __('Name', 'sp'),
-      'email' => __('Email', 'sp'),
-      'mobile'    => __('Mobile', 'sp')
+      'email'    => __('Email', 'sp'),
+      'posttitle' => __('Post-Title', 'sp')
     ];
 
     return $columns;
@@ -170,9 +140,8 @@ class Subscriber_List extends WP_List_Table
   public function get_sortable_columns()
   {
     $sortable_columns = array(
-      'name' => array('name', true),
-      'email' => array('email', false),
-      'mobile' => array('mobile', false),
+      'email' => array('email', true),
+      'posttitle' => array('posttitle', true)
 
     );
 
@@ -186,63 +155,19 @@ class Subscriber_List extends WP_List_Table
    *
    * @return array
    */
-  public function get_bulk_actions()
-  {
-    $actions = [
-      'bulk-delete' => 'Delete'
-    ];
-
-    return $actions;
-  }
 
 
   public function column_default($item, $column_name)
   {
     switch ($column_name) {
-      case 'name':
       case 'email':
-      case 'mobile':
+      case 'posttitle':
         return $item[$column_name];
       default:
         return print_r($item, true); //Show the whole array for troubleshooting purposes
     }
   }
 
-  public function process_bulk_action()
-  {
-
-    //Detect when a bulk action is being triggered...
-    if ('delete' === $this->current_action()) {
-
-      // In our file that handles the request, verify the nonce.
-      $nonce = esc_attr($_REQUEST['_wpnonce']);
-
-      if (!wp_verify_nonce($nonce, 'sp_delete_users')) {
-        die('Go get a life script kiddies');
-      } else {
-        self::delete_users(absint($_GET['users']));
-
-        wp_redirect(esc_url(add_query_arg()));
-        exit;
-      }
-    }
-
-    // If the delete bulk action is triggered
-    if ((isset($_POST['action']) && $_POST['action'] == 'bulk-delete')
-      || (isset($_POST['action2']) && $_POST['action2'] == 'bulk-delete')
-    ) {
-
-      $delete_ids = esc_sql($_POST['bulk-delete']);
-
-      // loop over the array of record IDs and delete them
-      foreach ($delete_ids as $id) {
-        self::delete_users($id);
-      }
-
-      wp_redirect(esc_url(add_query_arg()));
-      exit;
-    }
-  }
 
 
   /**
@@ -257,17 +182,7 @@ class Subscriber_List extends WP_List_Table
     $sortable = $this->get_sortable_columns();
     $this->_column_headers = array($columns, $hidden, $sortable);
     /** Process bulk action */
-    $this->process_bulk_action();
 
-    $per_page     = $this->get_items_per_page('users_per_page', 4);
-    $current_page = $this->get_pagenum();
-    $total_items  = self::record_count();
-
-    $this->set_pagination_args([
-      'total_items' => $total_items, //WE have to calculate the total number of items
-      'per_page'    => $per_page //WE have to determine how many items to show on a page
-    ]);
-
-    $this->items = self::get_users($per_page, $current_page);
+    $this->items = self::get_users();
   }
 }
