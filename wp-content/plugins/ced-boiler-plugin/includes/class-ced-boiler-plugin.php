@@ -168,6 +168,9 @@ class Ced_Boiler_Plugin
 		$this->loader->add_action('manage_post_posts_custom_column', $plugin_admin, 'fetch_value_col_brand', 10, 2);
 		//Adding filter hooks for appending brand column in Post Table
 		$this->loader->add_filter('manage_post_posts_columns', $plugin_admin, 'add_col_brand');
+		//Adding Action for Ajax call with call-back Function
+		$this->loader->add_action('wp_ajax_save_meta_action', $plugin_admin, 'save_meta_brand');
+
 	}
 
 	/**

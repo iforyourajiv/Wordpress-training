@@ -76,6 +76,12 @@ class Ced_Boiler_Plugin_Admin
 		 */
 
 		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/ced-boiler-plugin-admin.css', array(), $this->version, 'all');
+		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/save_custom_meta.js', array('jquery'), $this->version, 'all');
+		wp_localize_script(
+			$this->plugin_name,
+			'ajax_save_meta', //handle Name
+			array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) )
+		  );
 	}
 
 	/**
@@ -145,7 +151,10 @@ class Ced_Boiler_Plugin_Admin
 			$valueforBrand = get_post_meta($post->ID, 'ced_metabox_brand', true);
 ?>
 			<label for="ced_meta_box_field">Brand</label>
+			<input type="hidden" id="ced_meta_brand_id" name="ced_meta_brand_id" value="<?php echo $post->ID?>">
 			<input type="text" id="ced_meta_brand" name="ced_meta_brand" value="<?php echo $valueforBrand ?>">
+			<button id= 'save_meta' style='background:#288CFB;color:white;padding:10px'>Save Brand</button></a>
+			<br><span id="message"></span>
 <?php
 		}
 	}
@@ -211,4 +220,18 @@ class Ced_Boiler_Plugin_Admin
 	{
 		return array_merge($columns, ['color' => __('color', 'ced-boiler-plugin')]);
 	}
+
+
+
+	public function save_meta_brand(){
+	$value=$_POST['valueforfun'];
+	$id=$_POST['valueforpost'];
+	if(update_post_meta($id, 'ced_metabox_brand', $value))
+	{
+		echo "Brand is Successfully saved";
+	} 
+	wp_die();
+	}
 }
+
+
